@@ -8,7 +8,7 @@ function [matrix, scale, predicted_responses, errs] = ...
 % models are supported.
 %
 % USAGE:
-% [M, errs_train, scale, predicted_responses] = ccmtrain(camera_responses,...
+% [M, scale, predicted_responses, errs_train] = ccmtrain(camera_responses,...
 %                                                        target_responses,...
 %                                                        'param', value, ...);
 %
@@ -394,7 +394,7 @@ field_names = fieldnames(param);
 field_name_dict.allowscale = 'Allow scaling camera responses';
 field_name_dict.bias = 'Add bias (offset)';
 field_name_dict.loss = 'Loss function';
-field_name_dict.metric = 'Color difference metric';
+field_name_dict.metric = 'Color difference metrics';
 field_name_dict.model = 'Color correction model';
 field_name_dict.observer = 'CIE standard colorimetric observer';
 field_name_dict.omitlightness = 'Omit the lightness';
