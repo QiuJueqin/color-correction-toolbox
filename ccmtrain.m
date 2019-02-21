@@ -170,7 +170,10 @@ if param.preservewhite == true
 end
 
 % matrix calculation
-matrix0 = expanded_camera_responses \ target_responses; % initial matrix
+% init: weighted least squares
+matrix0 = (expanded_camera_responses' * diag(param.weights) * expanded_camera_responses)^(-1) *...
+          expanded_camera_responses' * diag(param.weights) * target_responses;
+
 switch lower(param.loss)
     case 'mse'
         matrix = matrix0;

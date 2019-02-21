@@ -8,6 +8,11 @@
 % *** set obs to 'user' to use optional argument   
 % *** xyzw as the white point
 % 
+% IMPORTANT NOTE:
+% Output xyz will be within range [0, 100] instead of [0, 1] !!!
+% Remember to use 'xyz = xyz/100;' if you were about to call xyz2linsrgb()
+% straight after lab2xyz().
+%
 % Modified based on the source version from 
 % Computational Colour Science using MATLAB 2e
 % https://www.mathworks.com/matlabcentral/fileexchange/
@@ -15,6 +20,10 @@
 % ===================================================
 
 function [xyz] = lab2xyz(lab,obs,xyzw)
+
+if nargin < 2
+    obs = 'd65_31'; % default obs
+end
 
 if strcmp('a_64',obs)
     white=[111.144 100.00 35.200];

@@ -8,6 +8,9 @@
 % *** set obs to 'user' to use optional argument   
 % *** xyzw as the white point
 % 
+% IMPORTANT NOTE:
+% Input xyz must be within range [0, 100] instead of [0, 1] !!!
+%
 % Modified based on the source version from 
 % Computational Colour Science using MATLAB 2e
 % https://www.mathworks.com/matlabcentral/fileexchange/
@@ -16,6 +19,9 @@
 
 function [lab] = xyz2lab(xyz,obs,xyzw)
  
+if nargin < 2
+    obs = 'd65_31'; % default obs
+end
 if (size(xyz,2)~=3)
    disp('xyz must be n by 3'); return;   
 end
