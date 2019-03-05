@@ -72,6 +72,11 @@ function colors = spectra2colors(spectra, wavelengths, varargin)
 % Copyright
 % Qiu Jueqin - Feb, 2019
 
+% if the number of spectra is larger than MAX_SAMPLES_NUM, e.g., reshaped
+% from a hyperspectral image, no interpolation will be performed to the
+% input spectra, otherwise the conversion will be extremly slow
+MAX_SAMPLES_NUM = 1E3;
+
 global WAVELENGTH_RANGE WAVELENGTH_INTERVAL
 
 % default wavelength range. Do NOT modify.
@@ -152,9 +157,15 @@ end
 % avoid unnecessary interpolation. interp1() is time-consuming when spectra
 % is large
 if ~isequal(wavelengths, interp_wavelengths)
-    % spectra need to be transposed first before interpolation because it is a matrix
-    spectra = interp1(wavelengths, spectra', interp_wavelengths, 'pchip');
-    if ~isrow(spectra)
+    % determine whether to perform interpolation for the input spectra
+    N = size(spectra, 1);
+    if N > MAX_SAMPLES_NUM
+        interp_wavelengths = wavelengths;
+    else
+        % spectra need to be transposed first before interpolation because it is a matrix
+        spectra = interp1(wavelengths, spectra', interp_wavelengths, 'pchip');
+    end
+    if iscolumn(spectra)
         spectra = spectra';
     end
 end
