@@ -55,7 +55,7 @@ if mod(BORDER, 2) ~= 0
     BORDER = BORDER + 1;
 end
 BORDER_HALF = BORDER/2;
-BORDER_COLOR = [.1, .1, .1];
+BORDER_COLOR = [.18, .18, .18];
 BLANK_SAMPLE_COLOR = [1, 1, 1];
 
 if ~iscell(color_groups)

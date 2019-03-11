@@ -163,7 +163,7 @@ if ~isequal(wavelengths, interp_wavelengths)
         interp_wavelengths = wavelengths;
     else
         % spectra need to be transposed first before interpolation because it is a matrix
-        spectra = interp1(wavelengths, spectra', interp_wavelengths, 'pchip');
+        spectra = interp1(wavelengths, spectra', interp_wavelengths, 'pchip')';
     end
     if iscolumn(spectra)
         spectra = spectra';
