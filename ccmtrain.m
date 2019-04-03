@@ -41,13 +41,14 @@ function [matrix, scale, predicted_responses, errs] = ...
 %                    validation. (default = false)
 % allowscale:        boolean value. If set to true, the camera responses
 %                    will be first scaled by a factor such that the mse
-%                    between camera's G values and target G/Y values is
-%                    minimized. This option will be useful if the camera
-%                    responses are in a different range from the target
-%                    responses. When this option is enabled,
-%                    'omitlightness' option will be false. (default = true)
+%                    between camera's G values and target G (or Y, 
+%                    depending on 'targetcolorspace') values is minimized.
+%                    This option will be useful if the camera responses are
+%                    in a different range from the target responses. When 
+%                    this option is enabled, 'omitlightness' option will be 
+%                    false. (default = true)
 % targetcolorspace:  specify the color space for the target responses.
-%                    'sRGB' (default, must be linear) | 'XYZ'
+%                    'sRGB' (default. It must be LINEAR sRGB) | 'XYZ'
 % preservewhite:     boolean value. If set to true, the white point (after
 %                    scaling), specified by 'whitepoint', will be preserved
 %                    after color correction, i.e., expanded_white_point
