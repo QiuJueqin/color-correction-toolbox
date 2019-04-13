@@ -56,7 +56,7 @@ else
 end
 
 % scaling
-if isempty(scale) || scale <= 0 || nargin < 4
+if nargin < 4 || isempty(scale) || scale <= 0
     scale = 1;
 end
 camera_responses = scale * camera_responses;
