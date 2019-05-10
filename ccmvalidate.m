@@ -95,12 +95,12 @@ end
 switch lower(param.targetcolorspace)
 	case 'srgb'
         target_xyz = linsrgb2xyz(target_responses);
-        target_lab = xyz2lab(100*target_xyz, obs);
+        target_lab = xyz2lab_(100*target_xyz, obs);
         predicted_xyz = linsrgb2xyz(predicted_responses);
-        predicted_lab = xyz2lab(100*predicted_xyz, obs);        
+        predicted_lab = xyz2lab_(100*predicted_xyz, obs);        
     case 'xyz'
-        target_lab = xyz2lab(100*target_responses, obs);
-        predicted_lab = xyz2lab(100*predicted_responses, obs);
+        target_lab = xyz2lab_(100*target_responses, obs);
+        predicted_lab = xyz2lab_(100*predicted_responses, obs);
 end
 
 disp('# Color correction validation results:');

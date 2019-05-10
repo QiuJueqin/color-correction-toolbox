@@ -148,9 +148,9 @@ end
 switch lower(param.targetcolorspace)
     case 'srgb'
         target_xyz = linsrgb2xyz(target_responses);
-        target_lab = xyz2lab(100*target_xyz, obs);
+        target_lab = xyz2lab_(100*target_xyz, obs);
     case 'xyz'
-        target_lab = xyz2lab(100*target_responses, obs);
+        target_lab = xyz2lab_(100*target_responses, obs);
 end
 
 % scaling
@@ -186,9 +186,9 @@ switch lower(param.loss)
         switch lower(param.targetcolorspace)
             case 'srgb'
                 predicted_xyz = @(x) linsrgb2xyz(predicted_responses(x));
-                predicted_lab = @(x) xyz2lab(100*predicted_xyz(x), obs);
+                predicted_lab = @(x) xyz2lab_(100*predicted_xyz(x), obs);
             case 'xyz'
-                predicted_lab = @(x) xyz2lab(100*predicted_responses(x), obs);
+                predicted_lab = @(x) xyz2lab_(100*predicted_responses(x), obs);
         end
 
         errs = @(x) lossfun(predicted_lab(x),...
@@ -227,9 +227,9 @@ predicted_responses = cc(camera_responses,...
 switch lower(param.targetcolorspace)
 	case 'srgb'
         predicted_xyz = linsrgb2xyz(predicted_responses);
-        predicted_lab = xyz2lab(100*predicted_xyz, obs);
+        predicted_lab = xyz2lab_(100*predicted_xyz, obs);
     case 'xyz'
-        predicted_lab = xyz2lab(100*predicted_responses, obs);
+        predicted_lab = xyz2lab_(100*predicted_responses, obs);
 end
 
 clear errs
