@@ -15,7 +15,7 @@ MATLAB version R2018b or higher with Image Processing Toolbox is **recommended**
 <img src="demo/screenshot.gif">
 
 * This gif is only for demonstration purpose. The source image suffered from lots of color degradation, that is why the result looks very bad :joy:
-* Please see `/demo/demo.m` for a more detailed explanation.
+* Please see `/demo/` folder for more detailed usage guides.
 
 # References
 

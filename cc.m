@@ -60,17 +60,10 @@ if nargin < 4 || isempty(scale) || scale <= 0
     scale = 1;
 end
 camera_responses = scale * camera_responses;
-camera_responses = responseClip(camera_responses, 0, 1);
+camera_responses = max(min(camera_responses, 1), 0);
 
 % expand the camera responses
 expanded_camera_responses = response_expand(camera_responses, model, add_bias);
 
 % color correction
 predicted_responses = expanded_camera_responses * matrix;
-predicted_responses = responseClip(predicted_responses, 0, 1);
-end
-
-
-function y = responseClip(x, lower, upper)
-y = max(min(x, upper), lower);
-end

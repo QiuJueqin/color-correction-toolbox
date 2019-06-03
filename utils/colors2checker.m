@@ -162,7 +162,7 @@ if param.show == true
     end
     imshow(img, 'Parent', hax);
     if groups_num > 1
-        xlabel(legend_str, 'FontSize', 16);
+        xlabel(legend_str, 'fontname', 'times new roman', 'fontsize', 18);
     end
 else
     hfig = [];

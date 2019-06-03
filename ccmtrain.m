@@ -49,16 +49,16 @@ function [matrix, scale, predicted_responses, errs] = ...
 %                    false. (default = true)
 % targetcolorspace:  specify the color space for the target responses.
 %                    'sRGB' (default. It must be LINEAR sRGB) | 'XYZ'
-% preservewhite:     boolean value. If set to true, the white point (after
-%                    scaling), specified by 'whitepoint', will be preserved
-%                    after color correction, i.e., expanded_white_point
-%                    * matrix = white_point. This constraint will be useful
-%                    if the camera responses have been white-balanced, as
-%                    the unconstrained optimization may cause the white
-%                    point deviating from the target value. See demo2.m for
-%                    example. (default = false)
-% whitepoint:        3x1 white point vector which is to be preserved.
-%                    (default = [])
+% preservewhite:     boolean value. If set to true, the white point [1, 1,
+%                    1] will be preserved after color correction as
+%                    WHITEPOINT, i.e., [1, 1, 1,...] * matrix = WHITEPOINT.
+%                    This constraint will be useful if the camera responses
+%                    have been white-balanced, as the unconstrained
+%                    optimization may cause the white point deviating from
+%                    the target value. See demo2.m for example. (default =
+%                    false)
+% whitepoint:        1x3 white point vector which is to be preserved after
+%                    color correction. (default = [])
 % observer:          specify the standard colorimetric observer functions
 %                    when converting XYZ to L*a*b* or vice versa.
 %                    '1931' (default) | '1964'
@@ -95,12 +95,10 @@ param = paramCheck(param);
 N = size(camera_responses, 1);
 assert(isequal(size(camera_responses), size(target_responses)),...
        'The numbers of test and target samples do not match.');
-assert(size(camera_responses, 2) == 3 && size(target_responses, 2) == 3,...
+assert(size(camera_responses, 2) == 3,...
        'Both test and target responses must be Nx3 matrices.');
-assert(max(camera_responses(:)) <= 1 && min(camera_responses(:)) >= 0,...
+assert(all(camera_responses >= 0 & camera_responses <= 1, 'all'),...
        'Test responses must be in the range of [0, 1]. Normalize them before running optimization.');
-assert(max(target_responses(:)) <= 1 && min(target_responses(:)) >= 0,...
-       'Target responses must be in the range of [0, 1]. Normalize them before running optimization.');
 if ~isempty(param.weights)
     assert(numel(param.weights) == N,...
            'The number of weights does not match the number of test samples.');
@@ -138,9 +136,9 @@ lossfun = eval(['@', param.loss]);
 
 % print info
 paramPrint(param);
-if param.preservewhite == true
-    fprintf(['Note: white point [%.3G, %.3G, %.3G] will be preserved. ',...
-             'Make sure \nthat the camera RGB responses have been correctly white balanced.\n'],...
+if param.preservewhite
+    fprintf(['Note: white point [1, 1, 1] will be preserved as [%.3G, %.3G, %.3G]. ',...
+             'Make sure \nthat the camera RGB responses have been correctly white balanced.\n\n'],...
              param.whitepoint);
 end
 
@@ -159,7 +157,7 @@ if param.allowscale == true
                     0, 1E3); % minimize the mse between camera's Green values and target Green/Y values
     scale = min(scale, 1/max(camera_responses(:)));
     camera_responses = scale * camera_responses;
-    camera_responses = responseClip(camera_responses, 0, 1);
+    camera_responses = max(min(camera_responses, 1), 0);
 else
     scale = 1;
 end
@@ -167,7 +165,7 @@ end
 % expand the camera responses
 expanded_camera_responses = response_expand(camera_responses, param.model, param.bias);
 if param.preservewhite == true
-    expanded_white_point = response_expand(param.whitepoint, param.model, param.bias);
+    expanded_white_point = response_expand([1, 1, 1], param.model, param.bias);
 end
 
 % matrix calculation
@@ -181,8 +179,7 @@ switch lower(param.loss)
     otherwise % nonlinear optimization
         matrix = @(x) reshape(x, term_num, 3);
         predicted_responses = @(x) expanded_camera_responses * matrix(x);
-        predicted_responses = @(x) responseClip(predicted_responses(x),...
-                                                       0, 1);
+
         switch lower(param.targetcolorspace)
             case 'srgb'
                 predicted_xyz = @(x) linsrgb2xyz(predicted_responses(x));
@@ -256,11 +253,6 @@ if param.omitlightness == true
     disp('# (lightness component has been omitted)');
 end
 disp('=================================================================');
-end
-
-
-function y = responseClip(x, lower, upper)
-y = max(min(x, upper), lower);
 end
 
 
@@ -342,7 +334,7 @@ if ~isempty(param.whitepoint)
            'The value of ''whitepoint'' must be a 1x3 vector.');
     param.preservewhite = true;
 elseif param.preservewhite == true
-    param.whitepoint = [1, 1, 1];
+    param.whitepoint = whitepoint('d65');
 end
 if param.preservewhite == true &&...
       (~ismember(lower(param.model), {'linear3x3', 'root6x3', 'root13x3'}) ||...
