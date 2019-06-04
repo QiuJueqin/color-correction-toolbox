@@ -29,6 +29,7 @@ RGB = checker2colors(dsg_img, [10, 14],...
 
 clearvars -except XYZ RGB
 
+
 %% color correction with white point preserved
 
 % white balancing RGB values
@@ -51,9 +52,9 @@ model = 'root6x3';
                                                  'whitepoint', white_point);
 
 % check if [1, 1, 1] has been preserved as [0.9505, 1.0000, 1.0888]
-predicted_white_point = cc([1, 1, 1],...
-                            model,...
-                            matrix);
+predicted_white_point = ccmapply([1, 1, 1],...
+                                 model,...
+                                 matrix);
                         
 white_point_err = sqrt(sum((predicted_white_point - white_point).^2));
 fprintf('residual error between user-specified and predicted white points: %.3e\n', white_point_err);
