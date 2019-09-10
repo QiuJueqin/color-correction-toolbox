@@ -1,4 +1,4 @@
-function [img, hfig] = colors2checker(color_groups, varargin)
+function [img, keypoints, hfig] = colors2checker(color_groups, varargin)
 %%
 % COLORS2CHECKER visualizes color responses by drawing a color checker.
 %
@@ -40,8 +40,9 @@ function [img, hfig] = colors2checker(color_groups, varargin)
 %                    the color checker image. (default = true)
 %
 % OUTPUTS:
-% img:               the color checker image
-% hfig:              the figure handle
+% img:               the color checker image.
+% keypoints:         key points of color patches in [x, y] form.
+% hfig:              the figure handle.
 %
 % Copyright
 % Qiu Jueqin - Feb, 2019
@@ -50,7 +51,7 @@ function [img, hfig] = colors2checker(color_groups, varargin)
 param = parseInput(varargin{:});
 
 % border between patches
-BORDER = round(param.squaresize / 10);
+BORDER = round(param.squaresize / 8);
 if mod(BORDER, 2) ~= 0
     BORDER = BORDER + 1;
 end
@@ -82,13 +83,14 @@ end
 
 % draw the color checker image
 img = cell(param.layout);
+keypoints = cell(param.layout);
 for j = 1:max_sample_num
     colors = zeros(groups_num, 3);
     for i = 1:groups_num
         if j <= size(color_groups{i}, 1)
             colors(i, :) = color_groups{i}(j, :);
         else
-            colors(i, :) = BLANK_SAMPLE_COLOR; % fill with [1, 1, 1]
+            colors(i, :) = BLANK_SAMPLE_COLOR;
         end
     end
     % indexing direction
@@ -102,9 +104,16 @@ for j = 1:max_sample_num
     end
     % draw a single patch
     img{row, col} = color2square(colors, param.squaresize, BORDER, BORDER_COLOR);
+    keypoints{row, col} = [BORDER_HALF + 1, BORDER_HALF + 1;...
+                           BORDER_HALF + param.squaresize, BORDER_HALF + 1;...
+                           BORDER_HALF + 1, BORDER_HALF+param.squaresize;...
+                           BORDER_HALF + param.squaresize, BORDER_HALF+param.squaresize] + ...
+                           [(col-1)*(param.squaresize+2*BORDER_HALF), (row-1)*(param.squaresize+2*BORDER_HALF)];
 end
 
 img = cell2mat(img);
+keypoints = keypoints';
+keypoints = cell2mat(keypoints(:));
 
 % add a (half) border
 [h, w, ~] = size(img);
@@ -114,6 +123,13 @@ row_border = repmat(reshape(BORDER_COLOR, 1, 1, 3),...
                     BORDER_HALF, w + BORDER, 1);
 img = [column_border, img, column_border];
 img = [row_border; img; row_border];
+keypoints = keypoints + [BORDER_HALF, BORDER_HALF];
+[h, w, ~] = size(img);
+keypoints = [1, 1;...
+             w, 1;...
+             1, h;...
+             w, h;...
+             keypoints]; % 4 corners on the outer box
 
 % legend
 if ~iscell(param.legend)
@@ -249,8 +265,8 @@ parser.addParameter('squaresize', 200, @(x)validateattributes(x, {'numeric'}, {'
 parser.parse(varargin{:});
 param = parser.Results;
 % check the params
-assert(param.squaresize >= 64,...
-       'square size must be greater than 64.');
+assert(param.squaresize >= 50,...
+       'square size must be greater than 50.');
 if ~isempty(param.parent)
     param.show = true;
 end

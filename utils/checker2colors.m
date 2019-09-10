@@ -63,6 +63,8 @@ function [colors, roi_rects] = checker2colors(checker_img, layout, varargin)
 %                    parameter is uselful for some raw images that are
 %                    darker then normal gamma corrected images. (default =
 %                    1)
+% gamma:             gamma correction for the image, same usage as 'scale'.
+%                    (default = 1)
 % show:              boolean value. Set to true to show the image as well
 %                    as the ROI, otherwise to close the figure after
 %                    vertices selection. You may wish to set it to false in
@@ -106,19 +108,18 @@ if isempty(param.roi)
     switch lower(param.mode)
         case 'drag'
             hint_str = 'Drag a rectangle to exactly cover the 4 corners of the color checker.';
-            [~, hfig] = colorcheckerimshow(checker_img, hint_str, param.scale);
+            [~, hfig] = colorcheckerimshow(checker_img, hint_str, param.scale, param.gamma);
             try 
                 hrect = drawrectangle('Label', 'Color Checker Rectangle');
                 vertex_pts = bbox2points(hrect.Position);
             catch
                 warning('Image Processing Toolbox is not found. Use ''getrect'' to get coordinate.');
-                vertex_pts = round(getrect(hfig));
-                vertex_pts = bbox2points(vertex_pts);
+                vertex_pts = bbox2points(getrect(hfig));
             end
         case 'click'
             hint_str = ['Click 4 points in the image to exactly cover the 4 corners of the color checker. ',...
                         'The first point you click will be stored as the upper-left vertex.'];
-            [~, hfig] = colorcheckerimshow(checker_img, hint_str, param.scale);
+            [~, hfig] = colorcheckerimshow(checker_img, hint_str, param.scale, param.gamma);
             try 
                 hrect = drawpolygon('Label', 'Color Checker Quadrangle');
                 vertex_pts = hrect.Position;
@@ -131,7 +132,7 @@ if isempty(param.roi)
         otherwise
             error('''mode'' must be either ''drag'' or ''click''.');
     end
-    % grid_pts will be a 4x2 matrix in [A; B; C; D] order
+    % vertex_pts will be a 4x2 matrix in [A; B; C; D] order:
     % A - - - - B
     % |         |
     % D - - - - C
@@ -151,6 +152,7 @@ if isempty(param.roi)
         img_rotation = 90;
         rotation_matrix = [0, -1; 1, 0];
         shift_vector = [0, width];
+        [height, width] = deal(width, height);
     elseif vertex_pts(1,1) >= vertex_pts(3,1) &&...
            vertex_pts(1,2) >= vertex_pts(3,2)
         % 1st patch in the bottom-right corner
@@ -163,6 +165,7 @@ if isempty(param.roi)
         img_rotation = -90;
         rotation_matrix = [0, 1; -1, 0];
         shift_vector = [height, 0];
+        [height, width] = deal(width, height);
     end
     
     % rotate image and transform the coordinates
@@ -184,8 +187,7 @@ if isempty(param.roi)
     % coordinate system of the rotated image
     grid_pts = vert2grids(vertex_pts, layout, param.direction);
     
-    % round off and clip
-    grid_pts = round(grid_pts);
+    % clip
     grid_pts(:,1) = max(min(grid_pts(:,1), width), 1);
     grid_pts(:,2) = max(min(grid_pts(:,2), height), 1);
     
@@ -202,11 +204,12 @@ else
     roi_rects = param.roi;
 end
 
-if param.show == true
+if param.show
     if ~exist('hfig', 'var')
         [~, hfig] = colorcheckerimshow(checker_img,...
                                        'ROI specified by user',...
-                                       param.scale);
+                                       param.scale,...
+                                       param.gamma);
     end
     hroi = cell(N,1);
     for i = 1:N
@@ -221,7 +224,7 @@ if param.show == true
 end
 
 % allow user to interactively adjust the positions of roi rectangles
-if param.allowadjust == true
+if param.allowadjust
     set(hfig, 'Name', 'Adjust the ROI rectangles and click ''Continue'' to finish');
     fig_size = get(hfig, 'Position');
     hbutton = uicontrol(hfig,...
@@ -229,8 +232,8 @@ if param.allowadjust == true
                        'String', 'Continue',...
                        'Callback', @pushbutton_callback);
     uiwait(hfig);
-    roi_rects = cell2mat(cellfun(@(x)x.Position, hroi, 'UniformOutput', false));
-    roi_rects = round(roi_rects);
+    roi_rects = cell2mat(cellfun(@(x)x.Position, hroi, 'uniformoutput', false));
+    commandwindow;
 end
 
 % determine the statistical way to extract responses from rois
@@ -239,10 +242,14 @@ getcolorfun = @median; % @mean is fine too
 % extract responses from rois
 colors = zeros(N, depth);
 for i = 1:N
-    % roi_rect is in [x_begin, y_begin, width, height] form
-    roi_rect = roi_rects(i, :);
-    roi = checker_img(roi_rect(2)+[0:roi_rect(4)],...
-                      roi_rect(1)+[0:roi_rect(3)],...
+    % roi_rect_ is in [x_begin, y_begin, width, height] form
+    roi_rect_ = round(roi_rects(i, :));
+    roi_rect_ = max(roi_rect_, 1);
+    roi_rect_(3) = min(roi_rect_(3), width - roi_rect_(1) - 1);
+    roi_rect_(4) = min(roi_rect_(4), height - roi_rect_(2) - 1);
+    
+    roi = checker_img(roi_rect_(2) + [0:roi_rect_(4)],...
+                      roi_rect_(1) + [0:roi_rect_(3)],...
                       :);
 	colors(i,:) = squeeze(getcolorfun(getcolorfun(roi, 1), 2))';
 end
@@ -284,7 +291,7 @@ ordered_pts = pts(orders, :);
 end
 
 
-function [himg, hfig] = colorcheckerimshow(img, hint, scale)
+function [himg, hfig] = colorcheckerimshow(img, hint, scale, gamma)
 %%
 % show a color checker image with some hint message
 try
@@ -292,7 +299,7 @@ try
 catch
     hfig = figure('color', 'w', 'name', hint);
 end
-himg = imshow(scale * img,...
+himg = imshow((scale*img).^gamma,...
               'Border','tight',...
               'InitialMagnification','fit');
 pause(0.1); % maximizing the figure has some delay
@@ -352,16 +359,17 @@ parser.addParameter('mode', 'drag', @ischar);
 parser.addParameter('roi', [], @(x)validateattributes(x, {'numeric'}, {'positive'}));
 parser.addParameter('roisize', [], @(x)validateattributes(x, {'numeric'}, {'positive'}));
 parser.addParameter('scale', 1, @(x)validateattributes(x, {'numeric'}, {'positive'}));
+parser.addParameter('gamma', 1, @(x)validateattributes(x, {'numeric'}, {'positive'}));
 parser.addParameter('show', true, @(x)islogical(x));
 parser.parse(varargin{:});
 param = parser.Results;
 % check the params
-if ~exist('drawrectangle', 'file') && param.allowadjust == true
+if ~exist('drawrectangle', 'file') && param.allowadjust
     warning(['''allowadjust'' can not be truned on because function ''drawrectangle'' is not found. ',...
              'Image Processing Toolbox version R2018b or higher is required to create images.roi objects.']);
     param.allowadjust = false;
 end
-if param.allowadjust == true
+if param.allowadjust
     param.show = true;
 end
 end
