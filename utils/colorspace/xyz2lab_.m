@@ -17,7 +17,7 @@
 % 40640-computational-colour-science-using-matlab-2e
 % ===================================================
 
-function [lab] = xyz2lab(xyz,obs,xyzw)
+function [lab] = xyz2lab_(xyz,obs,xyzw)
  
 if nargin < 2
     obs = 'd65_31'; % default obs
