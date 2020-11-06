@@ -1,6 +1,6 @@
 # Camera Color Correction Toolbox
 
-Camera Color Correction Toolbox makes it easy to calculate the optimal color correction matrix between the camera responses and the targets by minimizing nonlinear loss function.  This toolbox can          seamlessly cooperate with other modules in the Image Signal Processing pipeline like spatial nonuniformity correction, white-balancing, etc.
+A toolbox to calculate the optimal color correction matrix that maps the camera responses to the target values.
 
 Following color correction models are supported:
 
